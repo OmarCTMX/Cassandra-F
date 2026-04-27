@@ -13,4 +13,11 @@ Para nuestra "Herramienta de Analítica para Redes Sociales", Dgraph es la pieza
 
 # Flujo de trabajo
 
+Cassandra actúa como la capa de eventos en tiempo real — cada like, follow, sesión o cambio de cuenta se escribe ahí primero por su velocidad de escritura masiva. 
+
+MongoDB almacena los documentos base del sistema: el perfil del usuario, las publicaciones, stories y reels con todos sus metadatos, siendo la fuente de verdad que se lee cuando se carga cualquier pantalla.
+
+DGraph maneja exclusivamente las relaciones entre entidades — quién sigue a quién, qué contenido le gustó a quién, cómo se propagó una publicación — y es el motor que alimenta el feed y las recomendaciones.
+
+Las tres bases se conectan mediante UUIDs compartidos: cuando un usuario da like,Cassandra registra el evento y actualiza el counter, DGraph crea la arista entre usuario y publicación, y MongoDB no se toca — sus documentos se mantienen limpios de contadores para evitar contención en escrituras concurrentes. El resultado es una arquitectura donde cada base hace únicamente lo que hace mejor, sin duplicar responsabilidades.
 
