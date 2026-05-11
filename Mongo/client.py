@@ -88,6 +88,60 @@ def get_trends():
     print(f"Status: {resp.status_code}")
     print_json(resp.json())
 
+def update_preferences():
+    print("\n--- ACTUALIZAR PREFERENCIAS ---")
+    email = input("tu correo: ").strip()
+    
+    print("\nPreferencias actuales:")
+    resp = requests.get(f"{API_URL}/users/{email}/preferences")
+    if resp.status_code == 200:
+        print_json(resp.json())
+    
+    print("\nNuevas preferencias (enter para mantener):")
+    theme = input("tema (light/dark): ").strip()
+    notifications = input("notificaciones (true/false): ").strip()
+    language = input("idioma (es/en): ").strip()
+    
+    payload = {}
+    if theme: payload["theme"] = theme
+    if notifications: payload["notifications"] = notifications.lower() == "true"
+    if language: payload["language"] = language
+    
+    if not payload:
+        print("no cambiaste nada")
+        return
+    
+    resp = requests.put(f"{API_URL}/users/{email}/preferences", json=payload)
+    print(f"Status: {resp.status_code}")
+    print_json(resp.json())
+
+def update_privacy():
+    print("\n--- CONFIGURAR PRIVACIDAD ---")
+    email = input("tu correo: ").strip()
+    
+    print("\nConfiguracion actual:")
+    resp = requests.get(f"{API_URL}/users/{email}/privacy")
+    if resp.status_code == 200:
+        print_json(resp.json())
+    
+    print("\nNueva configuracion (enter para mantener):")
+    visibility = input("visibilidad del perfil (public/private): ").strip()
+    show_email = input("mostrar correo (true/false): ").strip()
+    allow_messages = input("permitir mensajes (true/false): ").strip()
+    
+    payload = {}
+    if visibility: payload["profile_visibility"] = visibility
+    if show_email: payload["show_email"] = show_email.lower() == "true"
+    if allow_messages: payload["allow_messages"] = allow_messages.lower() == "true"
+    
+    if not payload:
+        print("no cambiaste nada")
+        return
+    
+    resp = requests.put(f"{API_URL}/users/{email}/privacy", json=payload)
+    print(f"Status: {resp.status_code}")
+    print_json(resp.json())
+
 def main():
     while True:
         print("\n" + "*" * 40)
@@ -100,7 +154,9 @@ def main():
         print("5. Buscar en contenido")
         print("6. Buscar por hashtag")
         print("7. Ver tendencias")
-        print("8. Salir")
+        print("8. Actualizar preferencias")
+        print("9. Configurar privacidad")
+        print("10. Salir")
 
         opcion = input("\nelige una opcion: ").strip()
 
@@ -111,7 +167,9 @@ def main():
         elif opcion == "5": search_content()
         elif opcion == "6": get_by_hashtag()
         elif opcion == "7": get_trends()
-        elif opcion == "8":
+        elif opcion == "8": update_preferences()
+        elif opcion == "9": update_privacy()
+        elif opcion == "10":
             print("hasta luego!")
             break
         else:

@@ -11,7 +11,9 @@ user_types = {
     "email": str,
     "password": str,
     "bio": str,
-    "profile_pic": str
+    "profile_pic": str,
+    "preferences": dict,      
+    "privacy_settings": dict  
 }
 
 post_types = {
@@ -39,6 +41,10 @@ def validate_data(data, expected_types):
                     raise ValueError
                 # limpio espacios de cada hashtag
                 data[field] = [str(item).strip() for item in data[field]]
+            elif expected_types[field] == dict:
+                # preferences y privacy_settings son diccionarios
+                if not isinstance(data[field], dict):
+                    raise ValueError
             else:
                 # convierto el valor al tipo esperado 
                 data[field] = expected_types[field](data[field])
@@ -95,6 +101,17 @@ class UsersResource:
         # si no mandan bio o foto, los dejo vacios
         data.setdefault("bio", "")
         data.setdefault("profile_pic", "")
+        # valores por defecto para preferencias y privacidad
+        data.setdefault("preferences", {
+            "theme": "light",
+            "notifications": True,
+            "language": "es"
+        })
+        data.setdefault("privacy_settings", {
+            "profile_visibility": "public",
+            "show_email": False,
+            "allow_messages": True
+        })
         data["created_at"] = datetime.datetime.utcnow()
 
         try:
@@ -298,4 +315,68 @@ class TrendingHashtagsResource:
                   for item in self.db.posts.aggregate(pipeline)]
 
         resp.media = trends
+        resp.status = falcon.HTTP_200
+
+
+class UserPreferencesResource:
+    """maneja PUT /api/users/{email}/preferences -> actualizar preferencias"""
+
+    def __init__(self, db):
+        self.db = db
+
+    async def on_put(self, req, resp, email):
+        # busco al usuario por correo
+        user = find_user_by_email(self.db, email)
+
+        data = await req.media
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="las preferencias deben ser un JSON")
+
+        # actualizo las preferencias (se mezclan con las existentes)
+        self.db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"preferences": data}}
+        )
+
+        # devuelvo el usuario actualizado
+        updated_user = self.db.users.find_one({"_id": user["_id"]})
+        resp.media = serialize_user(updated_user)
+        resp.status = falcon.HTTP_200
+
+    async def on_get(self, req, resp, email):
+        # busco al usuario y devuelvo solo sus preferencias
+        user = find_user_by_email(self.db, email)
+        resp.media = user.get("preferences", {})
+        resp.status = falcon.HTTP_200
+
+
+class UserPrivacyResource:
+    """maneja PUT /api/users/{email}/privacy -> actualizar configuracion de privacidad"""
+
+    def __init__(self, db):
+        self.db = db
+
+    async def on_put(self, req, resp, email):
+        # busco al usuario por correo
+        user = find_user_by_email(self.db, email)
+
+        data = await req.media
+        if not isinstance(data, dict):
+            raise falcon.HTTPBadRequest(description="la configuracion de privacidad debe ser un objeto JSON")
+
+        # actualizo la configuracion de privacidad
+        self.db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"privacy_settings": data}}
+        )
+
+        # devuelvo el usuario actualizado
+        updated_user = self.db.users.find_one({"_id": user["_id"]})
+        resp.media = serialize_user(updated_user)
+        resp.status = falcon.HTTP_200
+
+    async def on_get(self, req, resp, email):
+        # busco al usuario y devuelvo solo su configuracion de privacidad
+        user = find_user_by_email(self.db, email)
+        resp.media = user.get("privacy_settings", {})
         resp.status = falcon.HTTP_200
