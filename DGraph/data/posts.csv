@@ -1,0 +1,4 @@
+post_id,content,hashtags,timestamp
+p_001,"Just wrapped my Honda Civic!","#cars,#civic",2026-05-10T10:00:00Z
+p_002,"Testing Dgraph traversal queries.","#dgraph,#nosql",2026-05-10T11:30:00Z
+p_003,"Pokémon VGC strategies for this season.","#pokemon,#vgc",2026-05-10T12:15:00Z

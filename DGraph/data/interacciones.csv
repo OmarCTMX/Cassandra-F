@@ -1,0 +1,13 @@
+source_type,source_id,relation,target_type,target_id,timestamp
+Usuario,arantxa_af,sigue_a,Usuario,cesar_ss,
+Usuario,arantxa_af,sigue_a,Usuario,omar_oa,
+Usuario,cesar_ss,sigue_a,Usuario,omar_oa,
+Usuario,cesar_ss,sigue_a,Usuario,doritoo,
+Usuario,doritoo,sigue_a,Usuario,arantxa_af,
+Usuario,arantxa_af,posteo,Post,p_001,
+Usuario,omar_oa,posteo,Post,p_002,
+Usuario,doritoo,posteo,Post,p_003,
+Usuario,cesar_ss,dio_like,Post,p_001,
+Usuario,doritoo,repostea,Post,p_001,
+Comentario,c_001,pertenece_a,Post,p_001,2026-05-10T10:05:00Z
+Comentario,c_001,escrito_por,Usuario,omar_oa,
