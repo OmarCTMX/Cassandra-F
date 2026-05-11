@@ -108,10 +108,8 @@ def populate_hashtag_trends(session):
         ("#Vibecodeo",        "2026-05-10-13", 540),
         ("#NoTengoTrabajo",   "2026-05-10-13", 3100),
         ("#NoTengoTrabajo",   "2026-05-10-14", 2900),
-        ("#Mamá",             "2026-05-10-10", 98000),
-        ("#Mamá",             "2026-05-10-11", 112000),
-        ("#Mamá",             "2026-05-10-12", 134000),
-        ("#Mamá",             "2026-05-10-13", 99000),
+        ("#Mamá",             "2026-05-10-10", 90),
+        ("#Mamá",             "2026-05-10-11", 110),
     ]
     for hashtag, bucket, count in rows:
         session.execute(q, (count, hashtag, bucket))
