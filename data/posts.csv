@@ -1,0 +1,13 @@
+post_id,content,hashtags,timestamp
+p_001,"Just wrapped my Honda Civic!","#cars,#civic",2026-05-10T10:00:00Z
+p_002,"Testing Dgraph traversal queries.","#dgraph,#nosql",2026-05-10T11:30:00Z
+p_003,"Pokémon VGC strategies for this season.","#pokemon,#vgc",2026-05-10T12:15:00Z
+p_004,"Python es el mejor lenguaje para data science","#python,#data,#ai",2026-05-10T13:00:00Z
+p_005,"MongoDB aggregate pipelines son muy poderosos","#mongodb,#nosql,#databases",2026-05-10T14:00:00Z
+p_006,"Diseñando interfaces accesibles para todos","#ux,#design,#accessibility",2026-05-10T15:00:00Z
+p_007,"Python y MongoDB juntos son una combinacion increible","#python,#mongodb,#backend",2026-05-10T16:00:00Z
+p_008,"Aprendiendo sobre bases de datos NoSQL","#nosql,#databases,#tech",2026-05-10T17:00:00Z
+p_009,"Tips de UX para mejorar la experiencia del usuario","#ux,#design,#tips",2026-05-10T18:00:00Z
+p_010,"Jugando Pokemon en el torneo regional","#pokemon,#esports,#gaming",2026-05-10T19:00:00Z
+p_011,"DevOps con Docker y Kubernetes","#devops,#docker,#backend",2026-05-10T20:00:00Z
+p_012,"Python para automatizar tareas del dia a dia","#python,#tech,#automation",2026-05-10T21:00:00Z

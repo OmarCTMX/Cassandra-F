@@ -1,0 +1,8 @@
+username,email,password,bio,interests
+arantxa_af,arantxa@iteso.mx,hash123,CS Student,"Tech, Cars"
+cesar_ss,cesar@iteso.mx,hash456,Data guy,"Data, AI"
+omar_oa,omar@iteso.mx,hash789,Backend dev,"DevOps, Backend"
+doritoo,doritoo@gamer.com,hash321,Gamer,"Pokémon, Esports"
+maria_lp,maria@iteso.mx,hash555,Diseñadora UX,"Design, UX"
+juan_dev,juan@iteso.mx,hash666,Full Stack dev,"Python, JavaScript"
+omar_AM,omar@cirujano.org,safepass,Cirujano amante del cafe,"Cafe, Cirujias"

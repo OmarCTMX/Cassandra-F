@@ -1,7 +1,4 @@
-"""
-populate.py - meto datos de prueba a la base de datos
-para correrlo: python populate.py
-"""
+import csv
 import datetime
 import logging
 import sys
@@ -13,60 +10,17 @@ from connect import get_db
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
+# rutas de los archivos CSV
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+USUARIOS_CSV     = os.path.join(DATA_DIR, "usuarios.csv")
+POSTS_CSV        = os.path.join(DATA_DIR, "posts.csv")
+INTERACCIONES_CSV = os.path.join(DATA_DIR, "interacciones.csv")
 
-# usuarios de prueba
-USERS = [
-    {
-        "username": "Omar Profe",
-        "email": "omar@profe.com",
-        "password": "pass1234",
-        "bio": "Cirujano amante del cafe",
-        "profile_pic": "https://drarmandogarcia.com.mx/wp-content/uploads/2018/07/Cirujanos-Generales-en-MOnterrey.jpg",
-    },
-    {
-        "username": "bob",
-        "email": "bob@iteso.com",
-        "password": "contraseña",
-        "bio": "Desarrollador backend profesional",
-        "profile_pic": "https://images.griddo.udit.es/c/cover/q/70/w/1920/h/1080/p/center/f/jpeg/desarrollador-front-end-desarrollador-de-back-end-desarrollador-full-stack-conoce-sus-diferencias-2-1920x1080",
-    },
-    {
-        "username": "caro",
-        "email": "caro@iteso.com",
-        "password": "caro2026",
-        "bio": "Diseñadora UX ITESO",
-        "profile_pic": "https://unirfp.unir.net/wp-content/uploads/sites/23/2023/07/mujer-diseC3B1adora-que-trabaja-en-el-nuevo-proyecto-de-desarrollo-de-sitios-web.jpg_s1024x1024wisk20cLfSxCtONH5KIjhPEyVYTxV_1el8KPbncCiKh4YHvHmY.jpg",
-    },
-]
 
-# posts de prueba
-POSTS_TEMPLATE = [
-    {
-        "content": "Explorando las nuevas funciones de Python y Mongo #python #tech",
-        "image": "",
-        "hashtags": ["python", "tech"],
-    },
-    {
-        "content": "MongoDB es increIble es mi pasion #mongodb #databases",
-        "image": "https://example.com/imgs/mongo.png",
-        "hashtags": ["mongodb", "databases"],
-    },
-    {
-        "content": "Diseño profesional diseño diseño #ux #design",
-        "image": "",
-        "hashtags": ["ux", "design"],
-    },
-    {
-        "content": "Me encanta tomar Cafe mientras opero #cafe #agujas",
-        "image": "",
-        "hashtags": ["medicina", "doctor"],
-    },
-    {
-        "content": "Me encanta programar a corazon abierto",
-        "image": "",
-        "hashtags": ["python", "medicina"],
-    },
-]
+def leer_csv(ruta):
+    """lee un csv y devuelve una lista de diccionarios"""
+    with open(ruta, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
 
 
 def populate():
@@ -77,29 +31,79 @@ def populate():
     db.posts.delete_many({})
     log.info("colecciones limpiadas")
 
-    # inserto los usuarios y guardo sus _ids en una lista
-    inserted_ids = []
-    for user_data in USERS:
-        user_data["created_at"] = datetime.datetime.utcnow()
-        result = db.users.insert_one(user_data.copy())
-        inserted_ids.append(result.inserted_id)
-        log.info(f"usuario insertado: {user_data['username']} -> {result.inserted_id}")
+    # --- INSERTAR USUARIOS ---
+    usuarios_csv = leer_csv(USUARIOS_CSV)
+    # guardo un mapa de username -> _id para usarlo al insertar posts
+    username_to_id = {}
 
-    # reparto los posts entre los usuarios de forma ciclica
-    # post 0 -> usuario 0, post 1 -> usuario 1, post 2 -> usuario 2
-    # post 3 -> usuario 0 (vuelve a empezar), etc.
-    num_users = len(inserted_ids)
-    for i, post_data in enumerate(POSTS_TEMPLATE):
-        owner_id = inserted_ids[i % num_users]
+    for row in usuarios_csv:
+        user = {
+            "username": row["username"],
+            "email": row["email"],
+            "password": row["password"],
+            "bio": row.get("bio", ""),
+            "profile_pic": "",
+            # los interests del csv los guardo como preferencias
+            "preferences": {
+                "interests": row.get("interests", ""),
+                "theme": "light",
+                "notifications": True,
+                "language": "es"
+            },
+            "privacy_settings": {
+                "profile_visibility": "public",
+                "show_email": False,
+                "allow_messages": True
+            },
+            "created_at": datetime.datetime.utcnow()
+        }
+        result = db.users.insert_one(user)
+        username_to_id[row["username"]] = result.inserted_id
+        log.info(f"usuario insertado: {row['username']} -> {result.inserted_id}")
+
+    # --- LEER INTERACCIONES PARA SABER QUIEN POSTEO QUE ---
+
+    interacciones = leer_csv(INTERACCIONES_CSV)
+    post_id_to_username = {}
+    for row in interacciones:
+        if row["relation"] == "posteo":
+            post_id = row["target_id"]       
+            username = row["source_id"]      
+            post_id_to_username[post_id] = username
+
+    # --- INSERTAR POSTS ---
+    posts_csv = leer_csv(POSTS_CSV)
+
+    for row in posts_csv:
+        post_id = row["post_id"]
+
+        # busco quien es el dueño de este post segun interacciones.csv
+        username = post_id_to_username.get(post_id)
+        if not username or username not in username_to_id:
+            log.warning(f"no encontre autor para el post {post_id}, lo salto")
+            continue
+
+        # los hashtags vienen como "#cars,#civic", los limpio y separo
+        hashtags_raw = row.get("hashtags", "")
+        hashtags = [h.strip().lstrip("#") for h in hashtags_raw.split(",") if h.strip()]
+
+        # el timestamp del csv lo convierto a datetime, si falla uso la fecha actual
+        try:
+            created_at = datetime.datetime.fromisoformat(row["timestamp"].replace("Z", ""))
+        except (ValueError, KeyError):
+            created_at = datetime.datetime.utcnow()
+
         post = {
-            **post_data,
-            "user_id": owner_id,
-            "created_at": datetime.datetime.utcnow(),
+            "user_id": username_to_id[username],
+            "content": row["content"],
+            "image": "",
+            "hashtags": hashtags,
+            "created_at": created_at
         }
         result = db.posts.insert_one(post)
-        log.info(f"post insertado: '{post_data['content'][:40]}...' -> {result.inserted_id}")
+        log.info(f"post insertado: '{row['content'][:40]}...' -> {result.inserted_id}")
 
-    log.info("listo! base de datos poblada")
+    log.info("listo! base de datos poblada desde los CSVs")
 
 
 if __name__ == "__main__":
